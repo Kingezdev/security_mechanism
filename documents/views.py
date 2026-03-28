@@ -15,8 +15,22 @@ def generate_checksum(file):
     return checksum.hexdigest()
 
 
-@login_required
+
+def document_list(request):
+    # For now, show all documents or empty list if no user
+    if request.user.is_authenticated:
+        documents = Document.objects.filter(owner=request.user, is_deleted=False)
+    else:
+        documents = Document.objects.none()  # Empty queryset for anonymous users
+    return render(request, 'documents/document_list.html', {'documents': documents})
+
+
+
 def upload_document(request):
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please log in to upload documents.')
+        return redirect('document_list')
+        
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES)
         if form.is_valid():
@@ -44,8 +58,12 @@ def upload_document(request):
     return render(request, 'documents/upload.html', {'form': form})
 
 
-@login_required
+
 def download_document(request, pk):
+    if not request.user.is_authenticated:
+        messages.error(request, 'Please log in to download documents.')
+        return redirect('document_list')
+        
     document = get_object_or_404(Document, pk=pk, is_deleted=False)
 
     if document.owner != request.user:
