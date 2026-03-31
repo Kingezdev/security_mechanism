@@ -1,0 +1,209 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Security Mechanism{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <!-- Welcome Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-tachometer-alt me-2"></i>
+                                Welcome back, {{ profile.full_name }}!
+                            </h2>
+                            <p class="mb-0">
+                                <i class="fas fa-user-tag me-1"></i>
+                                {{ profile.get_role_display }} | 
+                                <i class="fas fa-building me-1"></i>
+                                {{ profile.department }}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{% url 'profile' %}" class="btn btn-light">
+                                <i class="fas fa-user-cog me-1"></i>
+                                Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-folder text-primary fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-1">{{ total_documents }}</h3>
+                            <p class="text-muted mb-0">Total Documents</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-shield-alt text-success fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-1">Secure</h3>
+                            <p class="text-muted mb-0">Encryption Status</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0">
+                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-clock text-info fa-2x"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h3 class="mb-1">Active</h3>
+                            <p class="text-muted mb-0">Account Status</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Documents -->
+    <div class="row">
+        <div class="col-lg-8 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2"></i>
+                            Recent Documents
+                        </h5>
+                        <a href="{% url 'document_list' %}" class="btn btn-sm btn-outline-primary">
+                            View All
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if recent_documents %}
+                        <div class="list-group list-group-flush">
+                            {% for document in recent_documents %}
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle p-2 me-3">
+                                            <i class="fas fa-file text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0">{{ document.title }}</h6>
+                                            <small class="text-muted">
+                                                {{ document.created_at|date:"M d, Y H:i" }} | 
+                                                {{ document.get_category_display }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <a href="{% url 'download_document' document.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No documents yet</h5>
+                            <p class="text-muted">Upload your first document to get started</p>
+                            <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                                <i class="fas fa-upload me-1"></i>
+                                Upload Document
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>
+                            Upload New Document
+                        </a>
+                        <a href="{% url 'document_list' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-folder me-2"></i>
+                            Browse Documents
+                        </a>
+                        <a href="{% url 'profile' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-user-cog me-2"></i>
+                            Update Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card shadow-sm mt-3">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        Profile Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <small class="text-muted">Full Name</small>
+                        <p class="mb-0 fw-bold">{{ profile.full_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Role</small>
+                        <p class="mb-0">
+                            <span class="badge bg-primary">{{ profile.get_role_display }}</span>
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted">Department</small>
+                        <p class="mb-0">{{ profile.department }}</p>
+                    </div>
+                    <div>
+                        <small class="text-muted">ID Number</small>
+                        <p class="mb-0">{{ profile.identification_number }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
