@@ -27,6 +27,6 @@ def root_view(request):
 urlpatterns = [
     path('', root_view, name='root'),
     path('admin/', admin.site.urls),
-    # path('', include('documents.urls')),  # Temporarily commented out - documents app not in this branch
+    path('', include('documents.urls')),
     path('accounts/', include('accounts.urls')),
 ]

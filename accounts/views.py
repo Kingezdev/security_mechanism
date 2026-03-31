@@ -87,9 +87,8 @@ def dashboard_view(request):
     # Get dashboard data based on user role
     context = {
         'profile': profile,
-        # Document features temporarily disabled in this branch
-        # 'total_documents': request.user.documents.filter(is_deleted=False).count(),
-        # 'recent_documents': request.user.documents.filter(is_deleted=False).order_by('-created_at')[:5],
+        'total_documents': request.user.documents.filter(is_deleted=False).count(),
+        'recent_documents': request.user.documents.filter(is_deleted=False).order_by('-created_at')[:5],
     }
     
     return render(request, 'accounts/dashboard.html', context)
