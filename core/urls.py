@@ -15,8 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.shortcuts import redirect
+
+def root_view(request):
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    else:
+        return redirect('login')
 
 urlpatterns = [
+    path('', root_view, name='root'),
     path('admin/', admin.site.urls),
+    # path('', include('documents.urls')),  # Temporarily commented out - documents app not in this branch
+    path('accounts/', include('accounts.urls')),
 ]
