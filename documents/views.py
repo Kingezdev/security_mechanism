@@ -15,7 +15,6 @@ def generate_checksum(file):
     return checksum.hexdigest()
 
 
-
 def document_list(request):
     # For now, show all documents or empty list if no user
     if request.user.is_authenticated:

@@ -119,7 +119,7 @@
                                 {{ stat.role|title }}
                             </div>
                             <div class="progress" style="width: 100px; height: 8px;">
-                                <div class="progress-bar" style="width: {{ role_percentage }}%"></div>
+                                <div class="progress-bar" style="--progress-width: {{ role_percentage }}%; width: var(--progress-width);"></div>
                             </div>
                         </div>
                         {% endfor %}
@@ -152,7 +152,7 @@
                                 {{ stat.department }}
                             </div>
                             <div class="progress" style="width: 100px; height: 8px;">
-                                <div class="progress-bar bg-info" style="width: {{ dept_percentage }}%"></div>
+                                <div class="progress-bar bg-info" style="--progress-width: {{ dept_percentage }}%; width: var(--progress-width);"></div>
                             </div>
                         </div>
                         {% endfor %}
