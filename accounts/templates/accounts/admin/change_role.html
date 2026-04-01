@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Change User Role - Admin Dashboard{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>
+                        <i class="fas fa-user-edit me-2"></i>
+                        Change User Role
+                    </h2>
+                    <p class="text-muted">Modify role assignment for system users</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_user_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Info Card -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user me-2"></i>
+                        User Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" width="30%">Username:</td>
+                                    <td>{{ target_user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Full Name:</td>
+                                    <td>{{ target_user.get_full_name|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>{{ target_user.email }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" width="30%">Current Role:</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ target_user.profile.get_role_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Department:</td>
+                                    <td>{{ target_user.profile.department|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">ID Number:</td>
+                                    <td>{{ target_user.profile.identification_number|default:"Not set" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Change Form -->
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt me-2"></i>
+                        Change Role Assignment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="role" class="form-label fw-bold">Select New Role</label>
+                            <select class="form-select form-select-lg" id="role" name="role" required>
+                                <option value="">Choose a role...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.0 }}" {% if role.0 == current_role %}selected{% endif %}>
+                                    {{ role.1 }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Select the new role you want to assign to this user.
+                            </div>
+                        </div>
+
+                        <!-- Role Descriptions -->
+                        <div class="mb-4">
+                            <h6 class="fw-bold">Role Descriptions:</h6>
+                            <div class="row">
+                                {% for role in roles %}
+                                <div class="col-md-6 mb-2">
+                                    <div class="card border-light">
+                                        <div class="card-body p-2">
+                                            <strong>{{ role.1 }}:</strong>
+                                            <small class="text-muted d-block">
+                                                {% if role.0 == 'student' %}Regular student users with basic document access
+                                                {% elif role.0 == 'lecturer' %}Teaching staff with elevated privileges
+                                                {% elif role.0 == 'researcher' %}Research staff with special document access
+                                                {% elif role.0 == 'admin' %}Full system administration access
+                                                {% elif role.0 == 'registry_staff' %}Registry department staff with administrative duties
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Warning Section -->
+                        <div class="alert alert-warning" role="alert">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Important Notice
+                            </h6>
+                            <p class="mb-2">
+                                Changing a user's role will immediately affect their system permissions and access levels.
+                            </p>
+                            <hr>
+                            <p class="mb-0">
+                                <strong>Current Role:</strong> {{ target_user.profile.get_role_display }}<br>
+                                <strong>New Role:</strong> <span id="new-role-display">Not selected</span>
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'admin_user_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save me-1"></i>
+                                Change Role
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log (Placeholder) -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Changes
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No recent changes for this user</p>
+                        <small class="text-muted">Role change history will appear here</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('role').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    document.getElementById('new-role-display').textContent = selectedOption.text || 'Not selected';
+});
+</script>
+{% endblock %}

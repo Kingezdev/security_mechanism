@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}User Details - Admin Dashboard{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2>
+                        <i class="fas fa-user me-2"></i>
+                        User Details
+                    </h2>
+                    <p class="text-muted">Comprehensive view of user information and activity</p>
+                </div>
+                <div>
+                    <a href="{% url 'admin_user_list' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>
+                        Back to Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Card -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <div class="py-3">
+                        <i class="fas fa-user-circle fa-4x mb-2"></i>
+                        <h5 class="mb-0">{{ target_user.get_full_name|default:target_user.username }}</h5>
+                        <p class="mb-0">{{ profile.get_role_display }}</p>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <span class="badge {% if target_user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if target_user.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'admin_change_role' target_user.id %}" class="btn btn-warning">
+                            <i class="fas fa-user-edit me-1"></i>
+                            Change Role
+                        </a>
+                        <button class="btn btn-outline-danger" disabled>
+                            <i class="fas fa-ban me-1"></i>
+                            Deactivate User (Coming Soon)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        User Information
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Account Details</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="fw-bold" width="40%">Username:</td>
+                                    <td>{{ target_user.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>{{ target_user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Full Name:</td>
+                                    <td>{{ target_user.get_full_name|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">First Name:</td>
+                                    <td>{{ target_user.first_name|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Last Name:</td>
+                                    <td>{{ target_user.last_name|default:"Not set" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-3">Profile Information</h6>
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="fw-bold" width="40%">Role:</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ profile.get_role_display }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Department:</td>
+                                    <td>{{ profile.department|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">ID Number:</td>
+                                    <td>{{ profile.identification_number|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Phone:</td>
+                                    <td>{{ profile.phone_number|default:"Not set" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Address:</td>
+                                    <td>{{ profile.address|default:"Not set" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Timeline -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Account Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-success"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Account Created</h6>
+                                <p class="text-muted small mb-0">{{ target_user.date_joined|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        
+                        {% if target_user.last_login %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-info"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Last Login</h6>
+                                <p class="text-muted small mb-0">{{ target_user.last_login|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-warning"></div>
+                            <div class="timeline-content">
+                                <h6 class="mb-1">Profile Updated</h6>
+                                <p class="text-muted small mb-0">{{ profile.updated_at|date:"M d, Y H:i" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        User Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="bg-light rounded p-3">
+                                <h3 class="text-primary mb-0">{{ user_documents|length }}</h3>
+                                <p class="text-muted mb-0">Documents</p>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="bg-light rounded p-3">
+                                <h3 class="text-success mb-0">
+                                    {% if target_user.last_login %}
+                                        {{ target_user.last_login|timesince }}
+                                    {% else %}
+                                        Never
+                                    {% endif %}
+                                </h3>
+                                <p class="text-muted mb-0">Last Active</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <h6 class="text-muted mb-2">Account Status</h6>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>Account Status</span>
+                            <span class="badge {% if target_user.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if target_user.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span>Email Verified</span>
+                            <span class="badge bg-info">Verified</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <span>Profile Complete</span>
+                            <span class="badge {% if profile.department and profile.identification_number %}bg-success{% else %}bg-warning{% endif %}">
+                                {% if profile.department and profile.identification_number %}Complete{% else %}Incomplete{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Documents Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-alt me-2"></i>
+                        User Documents
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_documents %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Document Title</th>
+                                        <th>Category</th>
+                                        <th>Uploaded</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for doc in user_documents %}
+                                    <tr>
+                                        <td>{{ doc.title }}</td>
+                                        <td>{{ doc.get_category_display }}</td>
+                                        <td>{{ doc.created_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="badge bg-success">Active</span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary" disabled>
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Documents Found</h5>
+                            <p class="text-muted">This user hasn't uploaded any documents yet.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -25px;
+    top: 5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+}
+
+.timeline-content {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+}
+</style>
+{% endblock %}

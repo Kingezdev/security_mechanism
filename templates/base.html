@@ -88,6 +88,29 @@
                                 Documents
                             </a>
                         </li>
+                        {% if user.profile.role == 'admin' %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-shield-alt me-1"></i>
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-2"></i>
+                                    Admin Dashboard
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'admin_user_list' %}">
+                                    <i class="fas fa-users me-2"></i>
+                                    User Management
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="/admin/">
+                                    <i class="fas fa-cog me-2"></i>
+                                    Django Admin
+                                </a></li>
+                            </ul>
+                        </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
                 
@@ -164,6 +187,23 @@
                                 Profile
                             </a>
                         </li>
+                        {% if user.profile.role == 'admin' %}
+                        <li class="nav-item">
+                            <hr class="my-2">
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'admin_dashboard' %}">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                Admin Panel
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'admin_user_list' %}">
+                                <i class="fas fa-users me-2"></i>
+                                Manage Users
+                            </a>
+                        </li>
+                        {% endif %}
                     </ul>
                 </div>
             </nav>
