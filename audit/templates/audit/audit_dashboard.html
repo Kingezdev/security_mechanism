@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load audit_tags %}
+
+{% block title %}Audit Dashboard - Security Mechanism{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h1 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Audit Dashboard
+                    </h1>
+                    <p class="mb-0">Comprehensive audit and security monitoring overview</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ total_events }}</h4>
+                            <p class="mb-0">Total Events</p>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ security_events }}</h4>
+                            <p class="mb-0">Security Events</p>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h4 class="mb-0">{{ failed_events }}</h4>
+                            <p class="mb-0">Failed Events</p>
+                        </div>
+                        <div class="fs-1 opacity-50">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Event Type Statistics -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Event Type Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for stat in event_stats %}
+                            <div class="col-md-4 col-sm-6 mb-3">
+                                <div class="card border">
+                                    <div class="card-body text-center">
+                                        <h6 class="mb-2">{{ stat.display_name }}</h6>
+                                        <div class="progress mb-2" style="height: 10px">
+                                            {% with stat_type_class=stat.type|truncatechars:6 %}
+                                            <div class="progress-bar bg-{{ stat_type_class }}" 
+                                                 style="width: {{ stat.percentage }}%"
+                                                 role="progressbar">
+                                            </div>
+                                            {% endwith %}
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <strong>{{ stat.count }}</strong>
+                                                <p class="text-muted mb-0">Events</p>
+                                            </div>
+                                            <div class="col-6">
+                                                <strong>{{ stat.percentage|floatformat:1 }}%</strong>
+                                                <p class="text-muted mb-0">of total</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Events -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>
+                        Recent Events
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_events %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>User</th>
+                                        <th>Event</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in recent_events %}
+                                        <tr>
+                                            <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                            <td>{{ event.user.username|default:"System" }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ event.event_type|truncatechars:6 }}">
+                                                    {{ event.get_event_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ event.event_description|truncatewords:8 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent events found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Security Events -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Security Events
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if security_events %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>Description</th>
+                                        <th>User</th>
+                                        <th>IP Address</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in security_events %}
+                                        <tr class="table-danger">
+                                            <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ event.event_type|truncatechars:6 }}">
+                                                    {{ event.get_event_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ event.event_description|truncatewords:10 }}</td>
+                                            <td>{{ event.user.username|default:"System" }}</td>
+                                            <td>{{ event.ip_address|default:"-" }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No security events found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Failed Events -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-warning text-white border-bottom">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Failed Events
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if failed_events %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Event Type</th>
+                                        <th>Description</th>
+                                        <th>User</th>
+                                        <th>Error Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for event in failed_events %}
+                                        <tr class="table-warning">
+                                            <td>{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ event.event_type|truncatechars:6 }}">
+                                                    {{ event.get_event_type_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ event.event_description|truncatewords:10 }}</td>
+                                            <td>{{ event.user.username|default:"System" }}</td>
+                                            <td class="text-danger">{{ event.error_message|truncatewords:15 }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-check-circle fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No failed events found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
