@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Document Versions - {{ document.title }}{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-history me-2"></i>
+                Document Versions
+            </h2>
+            <p class="text-muted mb-0">{{ document.title }}</p>
+        </div>
+        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>
+            Back to Documents
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="mb-3">
+                <small class="text-muted">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Downloading any version will decrypt the file using your encryption key.
+                </small>
+            </div>
+
+            {% if versions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Version</th>
+                                <th>Filename</th>
+                                <th>File Size</th>
+                                <th>Checksum</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for version in versions %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-primary">v{{ version.version_number }}</span>
+                                        {% if forloop.first %}
+                                            <span class="badge bg-success ms-1">Latest</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <i class="fas fa-file me-1"></i>
+                                        {{ version.original_filename }}
+                                    </td>
+                                    <td>
+                                        {% if version.file_size < 1024 %}
+                                            {{ version.file_size }} B
+                                        {% elif version.file_size < 1024 * 1024 %}
+                                            {{ version.file_size|add:"0"|div:1024|floatformat:1 }} KB
+                                        {% elif version.file_size < 1024 * 1024 * 1024 %}
+                                            {{ version.file_size|add:"0"|div:1024|div:1024|floatformat:1 }} MB
+                                        {% else %}
+                                            {{ version.file_size|add:"0"|div:1024|div:1024|div:1024|floatformat:1 }} GB
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <code class="small">{{ version.checksum|truncatechars:16 }}...</code>
+                                    </td>
+                                    <td>{{ version.created_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <a href="{% url 'download_document' document.pk %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-download me-1"></i>
+                                            Download
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No versions found</h5>
+                    <p class="text-muted">This document has no version history.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
