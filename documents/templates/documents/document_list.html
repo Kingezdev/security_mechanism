@@ -90,6 +90,18 @@
                                             </a>
                                         </li>
                                         <li>
+                                            <a class="dropdown-item" href="{% url 'share_document' document.pk %}">
+                                                <i class="fas fa-share-alt me-2"></i>
+                                                Share Document
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'manage_shares' document.pk %}">
+                                                <i class="fas fa-users me-2"></i>
+                                                Manage Shares
+                                            </a>
+                                        </li>
+                                        <li>
                                             <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#reuploadModal{{ document.pk }}">
                                                 <i class="fas fa-upload me-2"></i>
                                                 Re-upload

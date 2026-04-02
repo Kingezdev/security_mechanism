@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Manage Shares - {{ document.title }}{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                <i class="fas fa-users me-2"></i>
+                Manage Shares
+            </h2>
+            <p class="text-muted mb-0">{{ document.title }}</p>
+        </div>
+        <div>
+            <a href="{% url 'share_document' document.pk %}" class="btn btn-primary me-2">
+                <i class="fas fa-plus me-1"></i>
+                Create New Share
+            </a>
+            <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>
+                Back to Documents
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            {% if shares %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Created</th>
+                                <th>Permission</th>
+                                <th>Expiry</th>
+                                <th>Downloads</th>
+                                <th>Status</th>
+                                <th>Share Link</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for share in shares %}
+                                <tr>
+                                    <td>
+                                        <small>{{ share.created_at|date:"M d, Y H:i" }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if share.permission == 'download' %}bg-success{% else %}bg-primary{% endif %}">
+                                            {{ share.get_permission_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if share.expires_at %}
+                                            <small class="{% if share.expires_at < now|date:'Y-m-d H:i:s' %}text-danger{% else %}text-muted{% endif %}">
+                                                {{ share.expires_at|date:"M d, Y H:i" }}
+                                            </small>
+                                        {% else %}
+                                            <span class="text-muted">Never</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if share.max_downloads %}
+                                            <small>{{ share.download_count }} / {{ share.max_downloads }}</small>
+                                        {% else %}
+                                            <small>{{ share.download_count }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if share.is_active %}
+                                            {% if share.expires_at and share.expires_at < now|date:'Y-m-d H:i:s' %}
+                                                <span class="badge bg-danger">Expired</span>
+                                            {% elif share.max_downloads and share.download_count >= share.max_downloads %}
+                                                <span class="badge bg-warning">Limit Reached</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-secondary">Revoked</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="input-group input-group-sm">
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   value="{{ request.scheme }}://{{ request.get_host }}/documents/shared/{{ share.share_token }}/" 
+                                                   readonly 
+                                                   id="share-url-{{ share.id }}">
+                                            <button class="btn btn-outline-secondary" 
+                                                    type="button" 
+                                                    onclick="copyShareUrl('share-url-{{ share.id }}')">
+                                                <i class="fas fa-copy"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if share.is_active %}
+                                            <form action="{% url 'revoke_share' share.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                        onclick="return confirm('Are you sure you want to revoke this share link?')">
+                                                    <i class="fas fa-ban me-1"></i>
+                                                    Revoke
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted small">Revoked</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-share-alt fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No shares created</h5>
+                    <p class="text-muted">This document hasn't been shared yet.</p>
+                    <a href="{% url 'share_document' document.pk %}" class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i>
+                        Create First Share
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function copyShareUrl(inputId) {
+    const input = document.getElementById(inputId);
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(input.value).then(function() {
+        // Show success feedback
+        const button = input.nextElementSibling;
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(function() {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy: ', err);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Share Link Error{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Share Link Error
+                    </h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-link-slash fa-4x text-danger mb-3"></i>
+                        <h5>Share Link Not Available</h5>
+                        <p class="text-muted">{{ error }}</p>
+                    </div>
+                    
+                    {% if share %}
+                        <div class="alert alert-info">
+                            <small>
+                                <strong>Share Details:</strong><br>
+                                Document: {{ share.document.title }}<br>
+                                Shared by: {{ share.shared_by.get_full_name|default:share.shared_by.username }}<br>
+                                Created: {{ share.created_at|date:"M d, Y H:i" }}
+                            </small>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="text-muted small">
+                        Please contact the person who shared this document for a new link.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

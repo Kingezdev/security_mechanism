@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Share Document - {{ document.title }}{% endblock %}
+
+{% block auth_content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-share-alt me-2"></i>
+                        Share Document
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>{{ document.title }}</h5>
+                        <p class="text-muted">{{ document.description|default:"No description" }}</p>
+                        <small class="text-muted">
+                            <i class="fas fa-folder me-1"></i>
+                            {{ document.get_category_display }} • 
+                            <i class="fas fa-code-branch me-1"></i>
+                            Version {{ document.get_latest_version.version_number }}
+                        </small>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.permission.id_for_label }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>
+                                Permission Level
+                            </label>
+                            {{ form.permission }}
+                            {% if form.permission.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.permission.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                <strong>View Only:</strong> Recipients can only view document information<br>
+                                <strong>View & Download:</strong> Recipients can view and download the document
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.expires_at.id_for_label }}" class="form-label">
+                                <i class="fas fa-clock me-1"></i>
+                                Expiry Time (Optional)
+                            </label>
+                            {{ form.expires_at }}
+                            {% if form.expires_at.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.expires_at.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave blank for no expiry</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.max_downloads.id_for_label }}" class="form-label">
+                                <i class="fas fa-download me-1"></i>
+                                Maximum Downloads (Optional)
+                            </label>
+                            {{ form.max_downloads }}
+                            {% if form.max_downloads.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ form.max_downloads.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Leave blank for unlimited downloads</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'document_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Back to Documents
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-share-alt me-1"></i>
+                                Create Share Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

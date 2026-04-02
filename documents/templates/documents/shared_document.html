@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shared Document - {{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-share-alt me-2"></i>
+                        Shared Document
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        This document has been shared with you securely.
+                    </div>
+
+                    <div class="mb-4">
+                        <h3>{{ document.title }}</h3>
+                        {% if document.description %}
+                            <p class="text-muted">{{ document.description }}</p>
+                        {% endif %}
+                        
+                        <div class="row text-muted small">
+                            <div class="col-md-6">
+                                <i class="fas fa-folder me-1"></i>
+                                {{ document.get_category_display }}
+                            </div>
+                            <div class="col-md-6">
+                                <i class="fas fa-code-branch me-1"></i>
+                                Version {{ document.get_latest_version.version_number }}
+                            </div>
+                            <div class="col-md-6">
+                                <i class="fas fa-calendar me-1"></i>
+                                Created: {{ document.created_at|date:"M d, Y" }}
+                            </div>
+                            <div class="col-md-6">
+                                <i class="fas fa-file me-1"></i>
+                                {{ document.get_file_size_display }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Share Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Permission:</strong>
+                                <span class="badge {% if share.permission == 'download' %}bg-success{% else %}bg-primary{% endif %}">
+                                    {{ share.get_permission_display }}
+                                </span>
+                            </div>
+                            {% if share.expires_at %}
+                                <div class="col-md-6">
+                                    <strong>Expires:</strong>
+                                    <span class="text-muted">
+                                        {{ share.expires_at|date:"M d, Y H:i" }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                            {% if share.max_downloads %}
+                                <div class="col-md-6">
+                                    <strong>Downloads:</strong>
+                                    <span class="text-muted">
+                                        {{ share.download_count }} / {{ share.max_downloads }}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div class="text-muted small">
+                            Shared by {{ share.shared_by.get_full_name|default:share.shared_by.username }} 
+                            on {{ share.created_at|date:"M d, Y" }}
+                        </div>
+                        {% if share.permission == 'download' %}
+                            <a href="{% url 'shared_document_download' share.share_token %}" class="btn btn-success">
+                                <i class="fas fa-download me-1"></i>
+                                Download Document
+                            </a>
+                        {% else %}
+                            <button class="btn btn-outline-secondary" disabled>
+                                <i class="fas fa-eye me-1"></i>
+                                View Only
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

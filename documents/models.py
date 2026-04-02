@@ -1,8 +1,13 @@
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth import get_user_model
 from encryption.models import EncryptionKey, IntegrityCheck
 from encryption.services import EncryptionService
+import secrets
+import uuid
+
+User = get_user_model()
 
 
 class Document(models.Model):
@@ -147,3 +152,119 @@ class DocumentVersion(models.Model):
             return False, "No integrity check available"
         
         return self.integrity_check.check_passed, self.integrity_check.failure_reason
+
+
+class DocumentShare(models.Model):
+    """Model for sharing documents with secure tokens and permissions"""
+    
+    PERMISSION_CHOICES = [
+        ('view', 'View Only'),
+        ('download', 'View & Download'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.CASCADE,
+        related_name="shares",
+    )
+    shared_by = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="shared_documents",
+    )
+    share_token = models.CharField(
+        max_length=64,
+        unique=True,
+        help_text="Secure token for accessing shared document"
+    )
+    permission = models.CharField(
+        max_length=20,
+        choices=PERMISSION_CHOICES,
+        default='view',
+        help_text="Permission level for shared access"
+    )
+    expires_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the share link expires (null for no expiry)"
+    )
+    max_downloads = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Maximum number of downloads allowed (null for unlimited)"
+    )
+    download_count = models.PositiveIntegerField(
+        default=0,
+        help_text="Number of times the document has been downloaded"
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text="Whether the share link is active"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['share_token']),
+            models.Index(fields=['document', 'is_active']),
+            models.Index(fields=['expires_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.document.title} shared by {self.shared_by.username}"
+    
+    @classmethod
+    def create_share(cls, document, shared_by, permission='view', expires_at=None, max_downloads=None):
+        """Create a new document share with secure token"""
+        # Generate secure token
+        token = secrets.token_urlsafe(48)
+        
+        return cls.objects.create(
+            document=document,
+            shared_by=shared_by,
+            share_token=token,
+            permission=permission,
+            expires_at=expires_at,
+            max_downloads=max_downloads
+        )
+    
+    def is_valid(self):
+        """Check if the share link is still valid"""
+        if not self.is_active:
+            return False, "Share link has been deactivated"
+        
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False, "Share link has expired"
+        
+        if self.max_downloads and self.download_count >= self.max_downloads:
+            return False, "Download limit exceeded"
+        
+        return True, "Share link is valid"
+    
+    def can_download(self):
+        """Check if the user can download the document"""
+        is_valid, message = self.is_valid()
+        if not is_valid:
+            return False, message
+        
+        if self.permission == 'view':
+            return False, "Download not permitted with view-only permission"
+        
+        return True, "Download allowed"
+    
+    def increment_download_count(self):
+        """Increment the download count"""
+        self.download_count += 1
+        self.save(update_fields=['download_count'])
+    
+    def get_share_url(self, request):
+        """Get the full share URL"""
+        return f"{request.scheme}://{request.get_host()}/documents/shared/{self.share_token}/"
+    
+    def revoke(self):
+        """Revoke the share link"""
+        self.is_active = False
+        self.save(update_fields=['is_active'])

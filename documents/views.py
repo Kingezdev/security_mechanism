@@ -3,12 +3,15 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import FileResponse, Http404
 from django.views.decorators.http import require_POST
-from .models import Document, DocumentVersion
-from .forms import DocumentForm, DocumentReuploadForm
+from django.contrib.auth import get_user_model
+from .models import Document, DocumentVersion, DocumentShare
+from .forms import DocumentForm, DocumentReuploadForm, DocumentShareForm
 from encryption.models import EncryptionKey
 from encryption.services import EncryptionService
 from audit.models import AuditLog
 import hashlib
+
+User = get_user_model()
 
 
 def generate_checksum(file):
@@ -278,3 +281,182 @@ def download_document(request, pk):
     except Exception as e:
         messages.error(request, f'Error decrypting file: {str(e)}')
         return redirect('document_list')
+
+
+@login_required
+def share_document(request, pk):
+    """Share a document with secure token"""
+    document = get_object_or_404(Document, pk=pk, is_deleted=False)
+    
+    if document.owner != request.user:
+        messages.error(request, 'You do not have permission to share this document.')
+        return redirect('document_list')
+    
+    if request.method == 'POST':
+        form = DocumentShareForm(request.POST)
+        if form.is_valid():
+            share = DocumentShare.create_share(
+                document=document,
+                shared_by=request.user,
+                permission=form.cleaned_data['permission'],
+                expires_at=form.cleaned_data['expires_at'],
+                max_downloads=form.cleaned_data['max_downloads']
+            )
+            
+            # Log the sharing
+            AuditLog.log_event(
+                user=request.user,
+                event_type='file_share',
+                description=f"Shared document: {document.title} ({share.get_permission_display()})",
+                resource_type='document',
+                resource_id=str(document.pk),
+                ip_address=request.META.get('REMOTE_ADDR'),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                session_key=request.session.session_key or '',
+                metadata={
+                    'share_id': str(share.id),
+                    'share_token': share.share_token,
+                    'permission': share.permission,
+                    'expires_at': share.expires_at.isoformat() if share.expires_at else None,
+                    'max_downloads': share.max_downloads
+                }
+            )
+            
+            share_url = share.get_share_url(request)
+            messages.success(request, f'Document shared successfully! Share URL: {share_url}')
+            return redirect('document_list')
+    else:
+        form = DocumentShareForm()
+    
+    return render(request, 'documents/share_document.html', {
+        'document': document,
+        'form': form
+    })
+
+
+@login_required
+def manage_shares(request, pk):
+    """Manage existing shares for a document"""
+    document = get_object_or_404(Document, pk=pk, is_deleted=False)
+    
+    if document.owner != request.user:
+        messages.error(request, 'You do not have permission to manage shares for this document.')
+        return redirect('document_list')
+    
+    shares = document.shares.all().order_by('-created_at')
+    
+    return render(request, 'documents/manage_shares.html', {
+        'document': document,
+        'shares': shares
+    })
+
+
+@login_required
+@require_POST
+def revoke_share(request, share_id):
+    """Revoke a document share"""
+    share = get_object_or_404(DocumentShare, id=share_id)
+    
+    if share.document.owner != request.user:
+        messages.error(request, 'You do not have permission to revoke this share.')
+        return redirect('document_list')
+    
+    share.revoke()
+    
+    # Log the revocation
+    AuditLog.log_event(
+        user=request.user,
+        event_type='file_share_revoke',
+        description=f"Revoked share for document: {share.document.title}",
+        resource_type='document',
+        resource_id=str(share.document.pk),
+        ip_address=request.META.get('REMOTE_ADDR'),
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        session_key=request.session.session_key or '',
+        metadata={
+            'share_id': str(share.id),
+            'share_token': share.share_token
+        }
+    )
+    
+    messages.success(request, 'Share link revoked successfully.')
+    return redirect('manage_shares', pk=share.document.pk)
+
+
+def shared_document_view(request, token):
+    """View a shared document via secure token"""
+    share = get_object_or_404(DocumentShare, share_token=token)
+    
+    # Check if share is valid
+    is_valid, message = share.is_valid()
+    if not is_valid:
+        return render(request, 'documents/share_error.html', {
+            'error': message,
+            'share': share
+        })
+    
+    return render(request, 'documents/shared_document.html', {
+        'share': share,
+        'document': share.document
+    })
+
+
+def shared_document_download(request, token):
+    """Download a shared document via secure token"""
+    share = get_object_or_404(DocumentShare, share_token=token)
+    
+    # Check if share is valid
+    is_valid, message = share.is_valid()
+    if not is_valid:
+        messages.error(request, message)
+        return redirect('shared_document_view', token=token)
+    
+    # Check if download is allowed
+    can_download, message = share.can_download()
+    if not can_download:
+        messages.error(request, message)
+        return redirect('shared_document_view', token=token)
+    
+    latest_version = share.document.get_latest_version()
+    if not latest_version or not latest_version.encrypted_file:
+        raise Http404("Document version not found")
+    
+    try:
+        # Decrypt the file
+        decrypted_file, success, error_msg = share.document.decrypt_file_data(
+            latest_version.encrypted_file
+        )
+        
+        if not success:
+            messages.error(request, f'Decryption failed: {error_msg}')
+            return redirect('shared_document_view', token=token)
+        
+        # Increment download count
+        share.increment_download_count()
+        
+        # Log the download
+        AuditLog.log_event(
+            user=None,  # Anonymous download
+            event_type='file_download',
+            description=f"Downloaded shared document: {share.document.title}",
+            resource_type='document',
+            resource_id=str(share.document.pk),
+            ip_address=request.META.get('REMOTE_ADDR'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            session_key=request.session.session_key or '',
+            metadata={
+                'share_id': str(share.id),
+                'share_token': share.share_token,
+                'download_count': share.download_count
+            }
+        )
+        
+        return FileResponse(
+            decrypted_file.open("rb"),
+            as_attachment=True,
+            filename=latest_version.original_filename,
+        )
+        
+    except Exception as e:
+        messages.error(request, f'Error decrypting file: {str(e)}')
+        return redirect('shared_document_view', token=token)
