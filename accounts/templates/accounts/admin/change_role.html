@@ -117,9 +117,9 @@
                                         <div class="card-body p-2">
                                             <strong>{{ role.1 }}:</strong>
                                             <small class="text-muted d-block">
-                                                {% if role.0 == 'student' %}Regular student users with basic document access
+                                                {% if role.0 == 'student' %}Regular student users with basic result access
                                                 {% elif role.0 == 'lecturer' %}Teaching staff with elevated privileges
-                                                {% elif role.0 == 'researcher' %}Research staff with special document access
+                                                {% elif role.0 == 'researcher' %}Research staff with special result access
                                                 {% elif role.0 == 'admin' %}Full system administration access
                                                 {% elif role.0 == 'registry_staff' %}Registry department staff with administrative duties
                                                 {% endif %}

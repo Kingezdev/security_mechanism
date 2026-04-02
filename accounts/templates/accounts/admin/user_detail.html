@@ -183,7 +183,7 @@
                         <div class="col-6 mb-3">
                             <div class="bg-light rounded p-3">
                                 <h3 class="text-primary mb-0">{{ user_documents|length }}</h3>
-                                <p class="text-muted mb-0">Documents</p>
+                                <p class="text-muted mb-0">Results</p>
                             </div>
                         </div>
                         <div class="col-6 mb-3">
@@ -224,14 +224,14 @@
         </div>
     </div>
 
-    <!-- Documents Section -->
+    <!-- Results Section -->
     <div class="row">
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-header bg-white border-bottom">
                     <h5 class="mb-0">
                         <i class="fas fa-file-alt me-2"></i>
-                        User Documents
+                        User Results
                     </h5>
                 </div>
                 <div class="card-body">
@@ -240,11 +240,10 @@
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Document Title</th>
+                                        <th>Result Title</th>
                                         <th>Category</th>
                                         <th>Uploaded</th>
                                         <th>Status</th>
-                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -252,14 +251,13 @@
                                     <tr>
                                         <td>{{ doc.title }}</td>
                                         <td>{{ doc.get_category_display }}</td>
-                                        <td>{{ doc.created_at|date:"M d, Y" }}</td>
+                                        <td>{{ doc.created_at|date:"M d, Y H:i" }}</td>
                                         <td>
-                                            <span class="badge bg-success">Active</span>
-                                        </td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary" disabled>
-                                                <i class="fas fa-download"></i>
-                                            </button>
+                                            {% if doc.is_deleted %}
+                                                <span class="badge bg-danger">Deleted</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% endif %}
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -269,8 +267,8 @@
                     {% else %}
                         <div class="text-center py-4">
                             <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No Documents Found</h5>
-                            <p class="text-muted">This user hasn't uploaded any documents yet.</p>
+                            <h5 class="text-muted">No Results Found</h5>
+                            <p class="text-muted">This user hasn't uploaded any results yet.</p>
                         </div>
                     {% endif %}
                 </div>
